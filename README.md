@@ -1,55 +1,111 @@
-# OrangeHRM Playwright
+OrangeHRM Playwright Test Automation
 
-Portfolio-grade end-to-end tests for the OrangeHRM demo application, using Playwright, TypeScript, Page Objects, and custom fixtures.
+QA automation project for the OrangeHRM web application using Playwright + TypeScript.
 
-## Stack and architecture
+The project combines manual test design with automated UI testing and CI/CD execution through Azure DevOps.
 
-- Playwright Test and TypeScript
-- One page object per OrangeHRM area in `pages/`
-- Scenario-only specifications in `tests/`
-- Reusable page-object fixtures in `fixtures/test-fixtures.ts`
-- Typed, value-only test data in `test-data/`
-- `utils/data-generator.ts` creates unique records and future dates. It avoids collisions in a shared public demo.
+Project Overview
 
-Each test owns its setup. Admin create/edit/delete scenarios generate unique values and remove their record in the same test. The profile test restores the value it changes. Tests run in one worker because this is a shared demo environment.
+- 72 functional test cases designed for OrangeHRM
+- Selected test cases automated using Playwright
+- Tests written in TypeScript
+- Page Object Model (POM) for page interactions
+- Reusable Playwright fixtures
+- Dynamic test data generation
+- GitHub for source control
+- Azure DevOps for CI/CD test execution
+- Allure for test reporting
 
-## Setup
+Current Automated Coverage
 
-```bash
+The current Playwright automation covers selected OrangeHRM functionality:
+
+Login
+
+- Valid login
+- Invalid username
+- Invalid password
+- Empty username
+- Empty password
+- Empty username and password
+- Logout
+
+Admin
+
+- User Management
+- Departments
+- Employment Status
+- Job Titles
+
+The automated test suite is being expanded progressively.
+
+Technology Stack
+
+Technology| Purpose
+Playwright| UI test automation
+TypeScript| Test development
+Node.js| Runtime
+Page Object Model| Test structure
+Playwright Fixtures| Reusable test setup
+GitHub| Source control
+Azure DevOps| CI/CD
+Allure| Test reporting
+
+CI/CD
+
+Playwright tests are executed through an Azure DevOps pipeline.
+
+GitHub
+   ↓
+Azure DevOps
+   ↓
+Playwright
+   ↓
+Test Execution
+   ↓
+Allure Report
+
+Project Structure
+
+tests/
+├── admin/
+│   ├── departments.spec.ts
+│   ├── employment-status.spec.ts
+│   ├── job-titles.spec.ts
+│   └── users.spec.ts
+│
+├── login/
+
+pages/
+fixtures/
+utils/
+
+playwright.config.ts
+package.json
+azure-pipelines.yml
+
+playwright.config.ts
+package.json
+azure-pipelines.yml
+
+Run Tests Locally
+
+Install dependencies:
+
 npm install
+
+Install Playwright browsers:
+
 npx playwright install
-```
 
-Copy `.env.example` to `.env`, then set the target and credentials. `playwright.config.ts` reads this file before tests start:
+Run tests:
 
-```text
-BASE_URL=https://opensource-demo.orangehrmlive.com
-ADMIN_USERNAME=Admin
-ADMIN_PASSWORD=admin123
-```
-
-`.env` is intentionally ignored by Git. The configuration has public-demo defaults to make initial exploration simple; use environment variables in CI and for any non-demo target.
-
-## Run
-
-```bash
 npx playwright test
-npx playwright test --headed
-npx playwright test tests/admin/users.spec.ts
-npx playwright test --project=chromium
+
+Open the Playwright HTML report:
+
 npx playwright show-report
-```
 
-`npm test`, `npm run test:headed`, `npm run test:ui`, and `npm run report` provide the same common workflows.
+Project Goal
 
-## Coverage design
-
-The suite covers login validation/logout, user administration, job titles, departments, employment status, editable personal information, leave validation, and recruitment candidates. It applies positive and negative tests, equivalence partitions, validation/error guessing, and data-isolated CRUD flows. Assertions verify visible success, validation, persistence, and search outcomes rather than only clicks.
-
-## POM and fixtures
-
-Specs request page objects from the custom fixture, e.g. `({ loginPage, userManagementPage })`. Page objects own locators, navigation, and interactions; specs describe the business outcome. Credentials are read only from the environment/configuration, never from a spec.
-
-## Demo assumptions and future improvements
-
-OrangeHRM's public demo is shared and can be reset or rate-limited. Vacancy names and leave balance/type vary by demo seed; the leave and recruitment tests should be parameterized for a stable private demo in CI. Future work: authenticated storage state, API setup/teardown, role-specific accounts, accessibility checks, tags, and cross-browser projects.
+Demonstrate practical QA automation skills using Playwright, TypeScript, GitHub, Azure DevOps CI/CD and Allure reporting.
