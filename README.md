@@ -2,12 +2,12 @@
 
 QA automation project for the **OrangeHRM** web application using **Playwright and TypeScript**.
 
-The project combines manual test design with automated UI testing and CI/CD execution through **Azure DevOps**.
+The project combines manual test design with automated UI testing, reusable test architecture, test reporting, and CI/CD execution through **Azure DevOps**.
 
 ## Project Overview
 
 * **72 functional test cases** designed for OrangeHRM
-* Selected test cases automated using **Playwright**
+* **23 Playwright tests** currently automated
 * Tests written in **TypeScript**
 * **Page Object Model (POM)** for page interactions
 * Reusable **Playwright fixtures**
@@ -15,13 +15,13 @@ The project combines manual test design with automated UI testing and CI/CD exec
 * **GitHub** for source control
 * **Azure DevOps** for CI/CD test execution
 * **Allure** for test reporting
-* Playwright HTML reports for local test results
+* **Playwright HTML Report** for local test results
 
 ## Automated Test Coverage
 
-The current Playwright automation covers selected OrangeHRM functionality.
+The current automation covers selected OrangeHRM functionality from the manually designed test suite.
 
-### Login
+### Login — 7 tests
 
 * Valid login
 * Invalid username
@@ -31,32 +31,40 @@ The current Playwright automation covers selected OrangeHRM functionality.
 * Empty username and password
 * Logout
 
-### Admin
+### Admin — 16 tests
 
-#### User Management
+#### User Management — 4 tests
 
-* Add user
-* User management scenarios
+* Add an ESS user
+* Search for and delete an ESS user
+* Validate mandatory fields when adding a user
+* Validate duplicate username handling
 
-#### Departments
+#### Departments — 4 tests
 
-* Add department
-* Edit department
-* Delete department
+* Add a department
+* Edit a department
+* Delete a department
+* Validate department data
 
-#### Employment Status
+#### Employment Status — 4 tests
 
-* Add employment status
-* Edit employment status
-* Delete employment status
+* Add an employment status
+* Edit an employment status
+* Delete an employment status
+* Validate employment status data
 
-#### Job Titles
+#### Job Titles — 4 tests
 
-* Add job title
-* Edit job title
-* Delete job title
+* Add a job title
+* Edit a job title
+* Delete a job title
+* Validate job title data
 
-> Automated coverage is being expanded progressively from the manually designed test suite.
+> **Current automation:** 23 tests
+> **Manual test suite:** 72 functional test cases
+>
+> Automated coverage is being expanded progressively from the broader manual test suite.
 
 ## Technology Stack
 
@@ -71,52 +79,55 @@ The current Playwright automation covers selected OrangeHRM functionality.
 | Azure DevOps           | CI/CD test execution                 |
 | Allure                 | Test reporting                       |
 | Playwright HTML Report | Local test reporting                 |
+| Prettier               | Code formatting                      |
 
 ## Test Automation Architecture
 
-The project follows a Page Object Model structure to separate test logic from page interactions.
+The project uses the **Page Object Model** to separate test logic from page interactions.
 
 ```text
-tests
-   │
-   ├── login
-   └── admin
-        ├── users
-        ├── departments
-        ├── employment-status
-        └── job-titles
+tests/
+├── login/
+└── admin/
+    ├── users.spec.ts
+    ├── departments.spec.ts
+    ├── employment-status.spec.ts
+    └── job-titles.spec.ts
 
-pages
-   └── Page Object classes
+pages/
+└── Page Object classes
 
-fixtures
-   └── Reusable Playwright test fixtures
+fixtures/
+└── Reusable Playwright test fixtures
 
-utils
-   └── Test utilities and dynamic test data
+test-data/
+└── Test data
 
-test-data
-   └── Test data files
+utils/
+└── Test utilities and dynamic data generation
 ```
 
-This structure helps keep test cases readable while making page interactions and common setup reusable.
+This structure keeps test cases readable and allows common page interactions and setup to be reused across tests.
 
 ## Project Structure
 
 ```text
 OrangeHRM-playwright/
 │
-├── .github/
-│   └── workflows/
-│
 ├── fixtures/
-│   └── Test fixtures
+│   └── test-fixtures.ts
 │
 ├── pages/
-│   └── Page Object classes
+│   ├── AdminPage.ts
+│   ├── DashboardPage.ts
+│   ├── DepartmentsPage.ts
+│   ├── EmploymentStatusPage.ts
+│   ├── JobTitlesPage.ts
+│   ├── LoginPage.ts
+│   └── UserManagementPage.ts
 │
 ├── test-data/
-│   └── Test data
+│   └── users.ts
 │
 ├── tests/
 │   ├── admin/
@@ -126,9 +137,10 @@ OrangeHRM-playwright/
 │   │   └── users.spec.ts
 │   │
 │   └── login/
+│       └── login.spec.ts
 │
 ├── utils/
-│   └── Test utilities
+│   └── data-generator.ts
 │
 ├── .env.example
 ├── .gitignore
@@ -145,18 +157,24 @@ OrangeHRM-playwright/
 
 The project uses **Azure DevOps** to execute the Playwright test suite.
 
-The current workflow is:
+### Pipeline workflow
 
 ```text
 GitHub
    ↓
 Azure DevOps Pipeline
    ↓
+Install Node.js
+   ↓
 Install dependencies
+   ↓
+Install Playwright browsers
    ↓
 Run Playwright tests
    ↓
-Test results / reports
+Generate test reports
+   ↓
+Publish test artifacts
 ```
 
 The Azure DevOps pipeline is defined in:
@@ -165,97 +183,133 @@ The Azure DevOps pipeline is defined in:
 azure-pipelines.yml
 ```
 
-This demonstrates integration between source control and automated test execution.
+This demonstrates integration between source control and automated test execution through CI/CD.
 
 ## Running Tests Locally
 
-### 1. Install dependencies
+### Install dependencies
 
 ```bash
 npm install
 ```
 
-### 2. Install Playwright browsers
+### Install Playwright browsers
 
 ```bash
 npx playwright install
 ```
 
-### 3. Run the test suite
+### Run the full test suite
 
 ```bash
 npx playwright test
 ```
 
-### 4. Run tests in headed mode
+### Run tests in headed mode
 
 ```bash
 npx playwright test --headed
 ```
 
-### 5. Run a specific test file
+### Run a specific test file
 
 ```bash
 npx playwright test tests/admin/departments.spec.ts
 ```
 
-### 6. Open the Playwright HTML report
+### Run tests in debug mode
+
+```bash
+npx playwright test --debug
+```
+
+### Open the Playwright HTML report
 
 ```bash
 npx playwright show-report
 ```
 
-## Test Reporting
+## Allure Reporting
 
-The project uses Playwright reporting for local test execution and **Allure** for additional test reporting.
+The project uses **Allure** for test reporting in addition to the Playwright HTML report.
 
-Test results can be reviewed after execution to investigate failed tests and understand the outcome of the automation suite.
+Generate the Allure report:
+
+```bash
+npm run allure:report
+```
+
+Open the report locally:
+
+```bash
+npm run allure:open
+```
 
 ## Test Data
 
-The project uses dynamic test data for scenarios where unique values are required.
+The project uses **dynamic test data** for scenarios where unique values are required.
 
-For example, generated values can be used when creating entities such as departments or employment statuses. This reduces conflicts between repeated test executions.
+For example, dynamically generated values can be used when creating departments, employment statuses, job titles, or users. This helps reduce conflicts when tests are executed repeatedly.
 
-Environment-specific configuration is kept outside the source code using environment variables.
+Environment-specific configuration is stored using environment variables.
 
-An example configuration is provided in:
+Example configuration:
 
 ```text
 .env.example
 ```
 
+Sensitive local configuration is kept outside source control through `.gitignore`.
+
 ## Quality Approach
 
-The project demonstrates a combination of manual and automated testing practices:
+The project combines manual test design with automated testing.
 
-* Functional test design
-* Positive test scenarios
-* Negative test scenarios
-* Boundary and edge-case considerations
-* UI automation
-* Page Object Model
-* Reusable fixtures
-* Dynamic test data
-* Test reporting
-* CI/CD execution
+The manual test suite considers:
 
-The manual test suite provides broader functional coverage, while Playwright automation focuses on selected high-value scenarios.
+* Positive scenarios
+* Negative scenarios
+* Boundary and edge cases
+* Functional validation
+* Role-based behaviour
+
+The automation focuses on selected high-value scenarios and demonstrates how manually designed test cases can be translated into maintainable automated tests.
+
+## Key QA Automation Practices
+
+This project demonstrates practical use of:
+
+* **Playwright**
+* **TypeScript**
+* **Page Object Model**
+* **Reusable fixtures**
+* **Dynamic test data**
+* **Environment variables**
+* **Test reporting**
+* **CI/CD with Azure DevOps**
+* **Source control with GitHub**
+* **Code formatting with Prettier**
 
 ## Project Goal
 
 The goal of this project is to demonstrate practical QA automation skills using a realistic web application.
 
-It demonstrates experience with:
+It shows the progression from **manual test design to automated UI testing and CI/CD execution**, using tools and practices commonly used in modern QA engineering.
 
-* **Playwright**
-* **TypeScript**
-* **Page Object Model**
-* **Test fixtures**
-* **Test data management**
-* **GitHub**
-* **Azure DevOps CI/CD**
-* **Automated test reporting**
+## Test Execution Demo
+
+A short video/GIF demonstrating the Playwright test execution and reporting can be added here.
+
+```text
+docs/
+└── playwright-test-run.gif
+```
+
+Example:
+
+```markdown
+![Playwright test execution](docs/playwright-test-run.gif)
+```
 
 ## Author
 
@@ -265,8 +319,3 @@ QA Engineer | Software Tester | Test Automation
 
 * GitHub: [IgorZig](https://github.com/IgorZig)
 * LinkedIn: [Igor Zigelbaum](https://www.linkedin.com/in/igorzig/)
-
-
-Project Goal
-
-Demonstrate practical QA automation skills using Playwright, TypeScript, GitHub, Azure DevOps CI/CD and Allure reporting.
