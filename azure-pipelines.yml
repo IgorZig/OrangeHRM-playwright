@@ -20,3 +20,15 @@ steps:
     displayName: 'Run Playwright tests'
     env:
       CI: 'true'
+
+  - script: |
+      npx allure generate allure-results --clean -o allure-report
+    displayName: 'Generate Allure report'
+    condition: always()
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      targetPath: 'allure-report'
+      artifact: 'allure-report'
+    displayName: 'Publish Allure report'
+    condition: always()
