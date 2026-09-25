@@ -298,6 +298,10 @@ It shows the progression from **manual test design to automated UI testing and C
 
 ## Test Execution Demo
 
+Playwright tests are executed automatically through Azure DevOps after changes are pushed to the `main` branch.
+
+The pipeline generates an Allure report and publishes it as a pipeline artifact.
+
 A short video/GIF demonstrating the Playwright test execution and reporting can be added here.
 
 ```text
