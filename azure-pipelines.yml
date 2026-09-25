@@ -13,6 +13,9 @@ steps:
   - script: npm ci
     displayName: 'Install dependencies'
 
+  - script: npm run typecheck
+    displayName: 'Type-check TypeScript'
+
   - script: npx playwright install --with-deps
     displayName: 'Install Playwright browsers'
 
