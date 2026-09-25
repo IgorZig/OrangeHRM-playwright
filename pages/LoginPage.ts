@@ -21,24 +21,13 @@ export class LoginPage {
     await this.usernameInput.fill(username);
     await this.passwordInput.fill(password);
 
-    await Promise.all([
-      this.page.waitForURL('**/dashboard/index'),
-      this.loginButton.click(),
-    ]);
+    await Promise.all([this.page.waitForURL('**/dashboard/index'), this.loginButton.click()]);
   }
 
   async submitLogin(username: string, password: string): Promise<void> {
     await this.usernameInput.fill(username);
     await this.passwordInput.fill(password);
     await this.loginButton.click();
-  }
-
-  async expectInvalidCredentials(): Promise<void> {
-    await expect(this.invalidCredentialsMessage).toBeVisible();
-  }
-
-  async expectRequiredFields(count: number): Promise<void> {
-    await expect(this.page.getByText('Required', { exact: true })).toHaveCount(count);
   }
 
   async logout(): Promise<void> {

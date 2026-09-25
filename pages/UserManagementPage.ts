@@ -9,7 +9,7 @@ export class UserManagementPage extends AdminPage {
 
   async open(): Promise<void> {
     await this.page.getByRole('link', { name: 'Admin' }).click();
-    await this.page.getByText('User Management', { exact: true }).click();
+    await this.page.getByRole('navigation', { name: 'Topbar Menu' }).getByText('User Management', { exact: true }).click();
     await this.page.getByRole('menuitem', { name: 'Users', exact: true }).click();
   }
 
@@ -47,11 +47,36 @@ export class UserManagementPage extends AdminPage {
 
   async deleteUser(username: string): Promise<void> {
     const row = this.page.getByRole('row').filter({ hasText: username });
-    await row.getByRole('button').last().click();
+    await row.getByRole('button').first().click();
     await this.page.getByRole('button', { name: 'Yes, Delete' }).click();
   }
 
   getRow(username: string): Locator {
     return this.page.getByRole('row').filter({ hasText: username });
+  }
+
+  async findRow(username: string): Promise<Locator> {
+    // Search first so users on later result pages can also be found.
+    await this.searchUser(username);
+    const row = this.getRow(username);
+
+    try {
+      await row.first().waitFor({ state: 'visible' });
+    } catch {
+      throw new Error(`User "${username}" was not found.`);
+    }
+
+    return row.first();
+  }
+
+  async cleanupUser(username: string): Promise<void> {
+    await this.open();
+    await this.searchUser(username);
+
+    const row = this.getRow(username);
+
+    if (await row.count() > 0) {
+      await this.deleteUser(username);
+    }
   }
 }

@@ -5,6 +5,7 @@ import { JobTitlesPage } from '../pages/JobTitlesPage';
 import { DepartmentsPage } from '../pages/DepartmentsPage';
 import { EmploymentStatusPage } from '../pages/EmploymentStatusPage';
 import { UserManagementPage } from '../pages/UserManagementPage';
+import { PimPage } from '../pages/PimPage';
 import { uniqueValue } from '../utils/data-generator';
 
 type ToastMessages = {
@@ -20,6 +21,7 @@ type TestFixtures = {
   dashboardPage: DashboardPage;
   jobTitlesPage: JobTitlesPage;
   departmentsPage: DepartmentsPage;
+  pimPage : PimPage;
   employmentStatusPage: EmploymentStatusPage;
   userManagementPage: UserManagementPage;
   departmentName: string;
@@ -47,6 +49,7 @@ export const test = base.extend<TestFixtures>({
   departmentsPage: async ({ page }, use) => use(new DepartmentsPage(page)),
   employmentStatusPage: async ({ page }, use) => use(new EmploymentStatusPage(page)),
   userManagementPage: async ({ page }, use) => use(new UserManagementPage(page)),
+  pimPage: async ({ page }, use) => use(new PimPage(page)),
   departmentName: async ({}, use) => {
     const name = uniqueValue('Automation Dept');
     await use(name);

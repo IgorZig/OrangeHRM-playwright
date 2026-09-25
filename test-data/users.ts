@@ -5,10 +5,13 @@ export interface UserData {
   employeeName: string;
   status: 'Enabled' | 'Disabled';
 }
-export const validUser = (username: string): UserData => ({
+export const validUser = (
+  username: string,
+  employeeName: string
+): UserData => ({
   username,
   password: 'TestUser123!',
   role: 'ESS',
-  employeeName: 'Paul Collings',
+  employeeName,
   status: 'Enabled',
 });

@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test';
+import { Locator, Page } from '@playwright/test';
 import { AdminPage } from './AdminPage';
 
 export class DepartmentsPage extends AdminPage {
@@ -12,21 +12,22 @@ export class DepartmentsPage extends AdminPage {
     await this.page.getByRole('menuitem', { name: 'Structure' }).click();
   }
 
+  getRow(name: string): Locator {
+    return this.page.getByText(name, { exact: true });
+  }
+
   async add(name: string): Promise<void> {
-  await this.page.locator('.oxd-switch-input').click();
-  await this.page.getByRole('checkbox', { name: 'Edit' }).check();
+    await this.page.locator('.oxd-switch-input').click();
+    await this.page.getByRole('checkbox', { name: 'Edit' }).check();
 
-  await this.page.getByRole('button', { name: 'Add' }).click();
-  const dialog = this.page.getByRole('dialog');
-  await dialog.getByRole('textbox').nth(1).fill(name);
-  await dialog.getByRole('button', { name: 'Save' }).click();
-
+    await this.page.getByRole('button', { name: 'Add' }).click();
+    const dialog = this.page.getByRole('dialog');
+    await dialog.getByRole('textbox').nth(1).fill(name);
+    await dialog.getByRole('button', { name: 'Save' }).click();
   }
 
   async edit(existing: string, replacement: string): Promise<void> {
-    const unit = this.page
-      .getByText(existing, { exact: true })
-      .locator('xpath=ancestor::li[1]');
+    const unit = this.page.getByText(existing, { exact: true }).locator('xpath=ancestor::li[1]');
 
     await unit.locator('button.org-action-icon').nth(1).click();
 
@@ -38,9 +39,7 @@ export class DepartmentsPage extends AdminPage {
   }
 
   async delete(name: string): Promise<void> {
-    const unit = this.page
-      .getByText(name, { exact: true })
-      .locator('xpath=ancestor::li[1]');
+    const unit = this.page.getByText(name, { exact: true }).locator('xpath=ancestor::li[1]');
 
     await unit.locator('button.org-action-icon').first().click();
 

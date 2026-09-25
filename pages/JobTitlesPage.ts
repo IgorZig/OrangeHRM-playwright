@@ -25,16 +25,19 @@ export class JobTitlesPage extends AdminPage {
       .getByRole('row')
       .filter({ hasText: existing })
       .getByRole('button')
-      .first()
+      .nth(1)
       .click();
-    const dialog = this.page.locator('.oxd-dialog-container-default');
-    const input = dialog.getByRole('textbox').first();
+
+    const input = this.page.locator('form').getByRole('textbox').first();
+
     await input.click();
     await input.fill(replacement);
-    await dialog.getByRole('button', { name: 'Save' }).click();
+
+    await this.page.getByRole('button', { name: 'Save' }).click();
   }
-  async delete(title: string): Promise<void> {
-    await this.page.getByRole('row').filter({ hasText: title }).getByRole('button').last().click();
+  async delete(name: string): Promise<void> {
+    await this.page.getByRole('row').filter({ hasText: name }).getByRole('button').first().click();
     await this.page.getByRole('button', { name: 'Yes, Delete' }).click();
+
   }
 }

@@ -4,13 +4,21 @@ test.describe('Employment status', () => {
   test.beforeEach(async ({ authenticatedLogin, employmentStatusPage }) => {
     await employmentStatusPage.open();
   });
-  test('Admin should add an employment status', async ({ employmentStatusPage, toastMessages, employmentStatusName }) => {
+  test('Admin should add an employment status', async ({
+    employmentStatusPage,
+    toastMessages,
+    employmentStatusName,
+  }) => {
     await employmentStatusPage.add(employmentStatusName);
     await expect(toastMessages.successMessage).toBeVisible();
     await expect(employmentStatusPage.getRow(employmentStatusName)).toBeVisible();
   });
 
-  test('Admin should edit an employment status', async ({ employmentStatusPage, toastMessages, employmentStatusName }) => {
+  test('Admin should edit an employment status', async ({
+    employmentStatusPage,
+    toastMessages,
+    employmentStatusName,
+  }) => {
     const edited = `${employmentStatusName} Updated`;
 
     await employmentStatusPage.add(employmentStatusName);
@@ -19,7 +27,11 @@ test.describe('Employment status', () => {
     await expect(employmentStatusPage.getRow(edited)).toBeVisible();
   });
 
-  test('Admin should delete an employment status', async ({ employmentStatusPage, toastMessages, employmentStatusName }) => {
+  test('Admin should delete an employment status', async ({
+    employmentStatusPage,
+    toastMessages,
+    employmentStatusName,
+  }) => {
     await employmentStatusPage.add(employmentStatusName);
     await employmentStatusPage.delete(employmentStatusName);
     await expect(toastMessages.deletedMessage).toBeVisible();

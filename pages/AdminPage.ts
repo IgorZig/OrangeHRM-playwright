@@ -16,10 +16,9 @@ export class AdminPage {
   async openDepartments(): Promise<void> {
     await this.page.getByRole('link', { name: 'Admin' }).click();
 
-    const organization = this.page.locator(
-      'span.oxd-topbar-body-nav-tab-item',
-      { hasText: /^Organization$/ },
-    );
+    const organization = this.page.locator('span.oxd-topbar-body-nav-tab-item', {
+      hasText: /^Organization$/,
+    });
     const structure = this.page.getByRole('menuitem', {
       name: 'Structure',
       exact: true,
