@@ -314,6 +314,8 @@ Example:
 ```markdown
 ![Playwright test execution](docs/playwright-test-run.gif)
 ```
+<img width="800" height="420" alt="ScreenRecording2026-09-25215507-ezgif com-video-to-gif-converter" src="https://github.com/user-attachments/assets/99cffc43-703d-408c-ae84-317a98777e5d" />
+<img width="800" height="398" alt="ScreenRecording2026-09-25221332-ezgif com-video-to-gif-converter" src="https://github.com/user-attachments/assets/de2210cd-58f3-4239-95e8-e0add659fb5c" />
 
 ## Author
 
