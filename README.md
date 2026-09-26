@@ -324,4 +324,4 @@ Example:
 QA Engineer | Software Tester | Test Automation
 
 * GitHub: [IgorZig](https://github.com/IgorZig)
-* LinkedIn: [Igor Zigelbaum](https://www.linkedin.com/in/igorzig/)
+* LinkedIn: [Igor Zigelbaum](https://www.linkedin.com/in/igorzigelbaum)
