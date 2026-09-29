@@ -4,6 +4,9 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
+variables:
+  PW_RUN_DIR: '$(Build.SourcesDirectory)/artifacts/ci'
+
 steps:
   - task: UseNode@1
     inputs:
@@ -11,27 +14,59 @@ steps:
     displayName: 'Install Node.js'
 
   - script: npm ci
-    displayName: 'Install dependencies'
+    displayName: 'Install locked dependencies'
 
   - script: npm run typecheck
     displayName: 'Type-check TypeScript'
 
-  - script: npx playwright install --with-deps
-    displayName: 'Install Playwright browsers'
-
-  - script: npx playwright test
-    displayName: 'Run Playwright tests'
-    env:
-      CI: 'true'
+  - script: npx playwright install --with-deps chromium
+    displayName: 'Install Chromium and system dependencies'
 
   - script: |
-      npm run allure:report
-    displayName: 'Generate Allure report'
+      mkdir -p "$PW_RUN_DIR"
+      npx playwright test --project=chromium --workers=1 --retries=0
+    displayName: 'Run Chromium tests without retries'
+    env:
+      CI: 'true'
+      PW_RUN_DIR: $(PW_RUN_DIR)
+      RUN_COMMIT: $(Build.SourceVersion)
+      BASE_URL: $(BASE_URL)
+      ADMIN_USERNAME: $(ADMIN_USERNAME)
+      ADMIN_PASSWORD: $(ADMIN_PASSWORD)
+
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFormat: 'JUnit'
+      testResultsFiles: 'artifacts/ci/junit.xml'
+      testRunTitle: 'OrangeHRM Chromium'
+      failTaskOnFailedTests: true
+      failTaskOnMissingResultsFile: false
+    displayName: 'Publish Azure test results'
+
+  - script: |
+      if [ -d "$PW_RUN_DIR/allure-results" ]; then
+        npm run allure:report -- "$PW_RUN_DIR"
+      else
+        echo "No Allure results: test execution did not produce a report."
+      fi
+    condition: succeededOrFailed()
+    env:
+      PW_RUN_DIR: $(PW_RUN_DIR)
+    displayName: 'Generate Allure report when results exist'
+
+  - script: |
+      if [ -d "$PW_RUN_DIR" ]; then
+        echo "##vso[task.setvariable variable=hasEvidence]true"
+      fi
     condition: always()
+    env:
+      PW_RUN_DIR: $(PW_RUN_DIR)
+    displayName: 'Check available evidence'
 
   - task: PublishPipelineArtifact@1
+    condition: and(always(), eq(variables['hasEvidence'], 'true'))
     inputs:
-      targetPath: 'allure-report'
-      artifact: 'allure-report'
-    displayName: 'Publish Allure report'
-    condition: always()
+      targetPath: '$(PW_RUN_DIR)'
+      artifact: 'qa-evidence'
+    displayName: 'Publish complete test evidence'
