@@ -5,12 +5,19 @@ demo credentials remain in `.env.example` and the central environment helper,
 explicitly limited to the OrangeHRM public-demo host. New automated accounts use
 generated passwords and are registered for cleanup before creation.
 
-The targeted scan inspected 178 relevant historical blobs, including 119 report
-text blobs and historical workbooks. Two historical workbook blobs contain custom
-credential entries (26 cells per version). The current files have no remaining
+The latest targeted scan inspected 206 relevant blobs reachable from current Git
+refs, including 119 report text blobs and historical workbooks. One reachable
+historical workbook blob contains custom credential entries (26 cells). The earlier
+audit found two such versions before the owner's history updates; changed reachability
+does not establish that old copies have been erased. The current files have no remaining
 non-placeholder username/password entries detected by that scan. No recognisable
 private-key/GitHub-token/AWS-access-key pattern was found. This is a bounded scan,
 not proof that every binary artifact or arbitrary token is safe.
+
+The latest owner-updated workbooks were inspected read-only and were not modified.
+This check searches labelled username/password workbook cells and recognisable
+key/token patterns in selected historical text formats. It does not validate every
+embedded screenshot, Git object outside current refs, or arbitrary credential format.
 
 ## Remaining owner action
 

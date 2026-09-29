@@ -4,31 +4,52 @@ test.describe('Job titles', () => {
   test.beforeEach(async ({ authenticatedLogin, jobTitlesPage }) => {
     await jobTitlesPage.open();
   });
-  test('Admin should add a valid job title', async ({ jobTitlesPage, toastMessages }) => {
-    const title = uniqueValue('QA Engineer');
-    await jobTitlesPage.add(title, 'Created by automated test');
-    await expect(toastMessages.successMessage).toBeVisible();
-    await expect(jobTitlesPage.getRow(title)).toBeVisible();
+  test('Admin should add a job title', async ({ jobTitlesPage, resources }) => {
+    const name = resources.track('jobTitle', uniqueValue('QA Title'));
+    await test.step('Create record', async () => {
+      await jobTitlesPage.add(name, 'Created by automated test');
+    });
+    await test.step('Reopen and verify saved record', async () => {
+      await jobTitlesPage.open();
+      await expect(jobTitlesPage.getRow(name)).toHaveCount(1);
+      await expect(
+        jobTitlesPage
+          .getRow(name)
+          .getByRole('cell', { name: 'Created by automated test', exact: true }),
+      ).toBeVisible();
+    });
   });
-
-  test('Admin should edit a valid job title', async ({ jobTitlesPage, toastMessages }) => {
-    const title = uniqueValue('QA Engineer');
-    const edited = `${title} Senior`;
-    await jobTitlesPage.add(title, 'Created by automated test');
-    await jobTitlesPage.edit(title, edited);
-    await expect(toastMessages.updatedMessage).toBeVisible();
-    await expect(jobTitlesPage.getRow(edited)).toBeVisible();
+  test('Admin should persist an edited job title', async ({ jobTitlesPage, resources }) => {
+    const name = resources.track('jobTitle', uniqueValue('QA Title'));
+    const edited = resources.track('jobTitle', name + ' Updated');
+    await test.step('Create record', async () => {
+      await jobTitlesPage.add(name);
+    });
+    await test.step('Edit record', async () => {
+      await jobTitlesPage.edit(name, edited);
+      await expect(jobTitlesPage.getRow(edited)).toHaveCount(1);
+    });
+    await test.step('Reopen and verify persistence', async () => {
+      await jobTitlesPage.open();
+      await expect(jobTitlesPage.getRow(edited)).toHaveCount(1);
+      await expect(jobTitlesPage.getRow(name)).toHaveCount(0);
+    });
   });
-
-  test('Admin should delete a valid job title', async ({ jobTitlesPage, toastMessages }) => {
-    const title = uniqueValue('QA Engineer');
-    await jobTitlesPage.add(title, 'Created by automated test');
-    await jobTitlesPage.delete(title);
-    await expect(toastMessages.deletedMessage).toBeVisible();
-    await expect(jobTitlesPage.getRow(title)).not.toBeVisible();
+  test('Admin should delete a job title', async ({ jobTitlesPage, resources }) => {
+    const name = resources.track('jobTitle', uniqueValue('QA Title'));
+    await test.step('Create record', async () => {
+      await jobTitlesPage.add(name);
+    });
+    await test.step('Delete record', async () => {
+      await jobTitlesPage.delete(name);
+    });
+    await test.step('Refresh and verify absence', async () => {
+      await jobTitlesPage.open();
+      await expect(jobTitlesPage.getRow(name)).toHaveCount(0);
+    });
   });
-  test('Admin should require a title', async ({ jobTitlesPage, page }) => {
+  test('Admin should require a job title name', async ({ jobTitlesPage }) => {
     await jobTitlesPage.add('');
-    await expect(page.getByText('Required', { exact: true })).toBeVisible();
+    await expect(jobTitlesPage.nameError).toHaveText('Required');
   });
 });

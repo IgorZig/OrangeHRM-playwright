@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 export interface UserData {
   username: string;
   password: string;
@@ -10,7 +11,7 @@ export const validUser = (
   employeeName: string
 ): UserData => ({
   username,
-  password: 'TestUser123!',
+  password: `Qa!${randomUUID()}`,
   role: 'ESS',
   employeeName,
   status: 'Enabled',

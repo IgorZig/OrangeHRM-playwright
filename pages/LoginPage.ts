@@ -33,5 +33,12 @@ export class LoginPage {
   async logout(): Promise<void> {
     await this.page.getByAltText('profile picture').click();
     await this.page.getByText('Logout').click();
+    await expect(this.page).toHaveURL(/\/auth\/login/);
+  }
+  error(field: 'Username' | 'Password'): Locator {
+    return this.page
+      .locator('.oxd-input-group')
+      .filter({ has: this.page.getByPlaceholder(field) })
+      .locator('.oxd-input-field-error-message');
   }
 }

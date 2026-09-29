@@ -1,82 +1,73 @@
-import { Locator, Page } from '@playwright/test';
+import { expect, Locator } from '@playwright/test';
 import { AdminPage } from './AdminPage';
 import { UserData } from '../test-data/users';
+import { exactRow, field, rowAction, search, waitForList } from '../utils/ui';
 
 export class UserManagementPage extends AdminPage {
-  constructor(page: Page) {
-    super(page);
+  async open() {
+    await this.page.goto('/web/index.php/admin/viewSystemUsers');
+    await waitForList(this.page);
   }
-
-  async open(): Promise<void> {
-    await this.page.getByRole('link', { name: 'Admin' }).click();
-    await this.page.getByRole('navigation', { name: 'Topbar Menu' }).getByText('User Management', { exact: true }).click();
-    await this.page.getByRole('menuitem', { name: 'Users', exact: true }).click();
+  error(label: string): Locator {
+    return field(this.page, label).locator('.oxd-input-field-error-message');
   }
-
-  private async selectOption(index: number, value: string): Promise<void> {
-    await this.page.locator('.oxd-select-text').nth(index).click();
+  async selectRole(role: 'Admin' | 'ESS') {
+    await this.selectOption('User Role', role);
+  }
+  private async selectOption(label: string, value: string) {
+    await field(this.page, label).locator('.oxd-select-text').click();
     await this.page.getByRole('option', { name: value, exact: true }).click();
   }
-
-  async addUser(user: UserData): Promise<void> {
+  async addUser(user: UserData) {
     await this.page.getByRole('button', { name: 'Add' }).click();
-    await this.selectOption(0, user.role);
-
-    const employee = this.page.getByPlaceholder('Type for hints...');
-    await employee.fill(user.employeeName);
-    await this.page.getByRole('option', { name: new RegExp(user.employeeName, 'i') }).click();
-
-    await this.selectOption(1, user.status);
-    const form = this.page.locator('form');
-    await form.getByRole('textbox').nth(1).fill(user.username);
-    await form.getByRole('textbox').nth(2).fill(user.password);
-    await form.getByRole('textbox').nth(3).fill(user.password);
-    await form.getByRole('button', { name: 'Save' }).click();
-  }
-
-  async submitEmptyUser(): Promise<void> {
-    await this.page.getByRole('button', { name: 'Add' }).click();
-    await this.page.getByRole('button', { name: 'Save' }).click();
-  }
-
-  async searchUser(username: string): Promise<void> {
-    const search = this.page.locator('form');
-    await search.getByRole('textbox').nth(0).fill(username);
-    await search.getByRole('button', { name: 'Search' }).click();
-  }
-
-  async deleteUser(username: string): Promise<void> {
-    const row = this.page.getByRole('row').filter({ hasText: username });
-    await row.getByRole('button').first().click();
-    await this.page.getByRole('button', { name: 'Yes, Delete' }).click();
-  }
-
-  getRow(username: string): Locator {
-    return this.page.getByRole('row').filter({ hasText: username });
-  }
-
-  async findRow(username: string): Promise<Locator> {
-    // Search first so users on later result pages can also be found.
-    await this.searchUser(username);
-    const row = this.getRow(username);
-
-    try {
-      await row.first().waitFor({ state: 'visible' });
-    } catch {
-      throw new Error(`User "${username}" was not found.`);
+    await this.selectRole(user.role);
+    await field(this.page, 'Employee Name').locator('input').fill(user.employeeName);
+    await this.page.getByRole('option', { name: user.employeeName, exact: true }).click();
+    await this.selectOption('Status', user.status);
+    for (const [label, value] of [
+      ['Username', user.username],
+      ['Password', user.password],
+      ['Confirm Password', user.password],
+    ]) {
+      await field(this.page, label).locator('input').fill(value);
     }
-
-    return row.first();
+    await this.save();
+    await expect(
+      this.page.getByText('Successfully Saved', { exact: true }).or(this.error('Username')),
+    ).toBeVisible();
   }
-
-  async cleanupUser(username: string): Promise<void> {
+  async save() {
+    await this.page.getByRole('button', { name: 'Save', exact: true }).click();
+  }
+  async submitEmptyUser() {
+    await this.page.getByRole('button', { name: 'Add' }).click();
+    await this.save();
+  }
+  async searchUser(username: string) {
+    await field(this.page, 'Username').locator('input').fill(username);
+    await search(this.page, '/api/v2/admin/users');
+  }
+  getRow(username: string) {
+    return exactRow(this.page, username);
+  }
+  async expectUser(user: UserData) {
+    await this.searchUser(user.username);
+    const row = this.getRow(user.username);
+    await expect(row).toHaveCount(1);
+    for (const value of [user.username, user.role, user.status, user.employeeName]) {
+      await expect(row.getByRole('cell', { name: value, exact: true })).toBeVisible();
+    }
+  }
+  async deleteUser(username: string) {
+    await rowAction(this.getRow(username), 'delete').click();
+    await this.page.getByRole('button', { name: 'Yes, Delete' }).click();
+    await expect(this.page.getByText('Successfully Deleted', { exact: true })).toBeVisible();
+  }
+  async cleanupUser(username: string) {
     await this.open();
     await this.searchUser(username);
-
-    const row = this.getRow(username);
-
-    if (await row.count() > 0) {
-      await this.deleteUser(username);
-    }
+    if (await this.getRow(username).count()) await this.deleteUser(username);
+    await this.searchUser(username);
+    await expect(this.getRow(username)).toHaveCount(0);
   }
 }

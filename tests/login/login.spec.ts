@@ -1,7 +1,7 @@
 import { test, expect } from '../../fixtures/test-fixtures';
 
-const admin = process.env.ADMIN_USERNAME ?? 'Admin';
-const password = process.env.ADMIN_PASSWORD ?? 'admin123';
+import { adminCredentials } from '../../utils/environment';
+const { username: admin, password } = adminCredentials();
 
 test.describe('Login', () => {
   test.beforeEach(async ({ loginPage }) => loginPage.open());
@@ -22,19 +22,26 @@ test.describe('Login', () => {
   });
   test('User should be told when username is empty', async ({ loginPage, page }) => {
     await loginPage.submitLogin('', password);
-    await expect(page.getByText('Required')).toBeVisible();
+    await expect(loginPage.error('Username')).toHaveText('Required');
   });
   test('User should be told when password is empty', async ({ loginPage, page }) => {
     await loginPage.submitLogin(admin, '');
-    await expect(page.getByText('Required')).toBeVisible();
+    await expect(loginPage.error('Password')).toHaveText('Required');
   });
   test('User should be told when both credentials are empty', async ({ loginPage, page }) => {
     await loginPage.submitLogin('', '');
-    await expect(page.getByText('Required')).toHaveCount(2);
+    await expect(loginPage.error('Username')).toHaveText('Required');
+    await expect(loginPage.error('Password')).toHaveText('Required');
   });
-  test('Logged-in user should be able to log out', async ({ loginPage }) => {
+  test('Logged-in user should be able to log out and lose protected access', async ({
+    loginPage,
+    page,
+  }) => {
     await loginPage.login(admin, password);
     await loginPage.logout();
+    await expect(loginPage.loginButton).toBeVisible();
+    await page.goto('/web/index.php/dashboard/index');
+    await expect(page).toHaveURL(/\/auth\/login/);
     await expect(loginPage.loginButton).toBeVisible();
   });
 });

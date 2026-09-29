@@ -1,4 +1,4 @@
-import { Locator, test as base } from '@playwright/test';
+import { test as base, Page } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { JobTitlesPage } from '../pages/JobTitlesPage';
@@ -6,43 +6,42 @@ import { DepartmentsPage } from '../pages/DepartmentsPage';
 import { EmploymentStatusPage } from '../pages/EmploymentStatusPage';
 import { UserManagementPage } from '../pages/UserManagementPage';
 import { PimPage } from '../pages/PimPage';
-import { uniqueValue } from '../utils/data-generator';
+import { adminCredentials } from '../utils/environment';
 
-type ToastMessages = {
-  successMessage: Locator;
-  updatedMessage: Locator;
-  deletedMessage: Locator;
-};
-
-type TestFixtures = {
+type Resource = 'user' | 'employee' | 'department' | 'employmentStatus' | 'jobTitle';
+type Fixtures = {
   loginPage: LoginPage;
   authenticatedLogin: LoginPage;
-  toastMessages: ToastMessages;
   dashboardPage: DashboardPage;
   jobTitlesPage: JobTitlesPage;
   departmentsPage: DepartmentsPage;
-  pimPage : PimPage;
   employmentStatusPage: EmploymentStatusPage;
   userManagementPage: UserManagementPage;
-  departmentName: string;
-  employmentStatusName: string;
+  pimPage: PimPage;
+  resources: { track: (kind: Resource, name: string) => string };
+  diagnostics: void;
 };
-export const test = base.extend<TestFixtures>({
+function cleanup(page: Page, kind: Resource, name: string) {
+  switch (kind) {
+    case 'user':
+      return new UserManagementPage(page).cleanupUser(name);
+    case 'employee':
+      return new PimPage(page).cleanupEmployee(name);
+    case 'department':
+      return new DepartmentsPage(page).cleanup(name);
+    case 'employmentStatus':
+      return new EmploymentStatusPage(page).cleanup(name);
+    case 'jobTitle':
+      return new JobTitlesPage(page).cleanup(name);
+  }
+}
+export const test = base.extend<Fixtures>({
   loginPage: async ({ page }, use) => use(new LoginPage(page)),
   authenticatedLogin: async ({ loginPage }, use) => {
-    const username = process.env.ADMIN_USERNAME ?? 'Admin';
-    const password = process.env.ADMIN_PASSWORD ?? 'admin123';
-
+    const { username, password } = adminCredentials();
     await loginPage.open();
     await loginPage.login(username, password);
     await use(loginPage);
-  },
-  toastMessages: async ({ page }, use) => {
-    await use({
-      successMessage: page.getByText('Successfully Saved', { exact: true }),
-      updatedMessage: page.getByText('Successfully Updated', { exact: true }),
-      deletedMessage: page.getByText('Successfully Deleted', { exact: true }),
-    });
   },
   dashboardPage: async ({ page }, use) => use(new DashboardPage(page)),
   jobTitlesPage: async ({ page }, use) => use(new JobTitlesPage(page)),
@@ -50,13 +49,61 @@ export const test = base.extend<TestFixtures>({
   employmentStatusPage: async ({ page }, use) => use(new EmploymentStatusPage(page)),
   userManagementPage: async ({ page }, use) => use(new UserManagementPage(page)),
   pimPage: async ({ page }, use) => use(new PimPage(page)),
-  departmentName: async ({}, use) => {
-    const name = uniqueValue('Automation Dept');
-    await use(name);
-  },
-  employmentStatusName: async ({}, use) => {
-    const name = uniqueValue('Contractor');
-    await use(name);
-  },
+  resources: [
+    async ({ context }, use, testInfo) => {
+      const records: { kind: Resource; name: string }[] = [];
+      await use({
+        track: (kind, name) => {
+          records.push({ kind, name });
+          return name;
+        },
+      });
+      if (!records.length) return;
+      const page = await context.newPage();
+      page.setDefaultTimeout(10_000);
+      const errors: string[] = [];
+      const outcomes: string[] = [];
+      try {
+        await base.step('Cleanup test-owned records', async () => {
+          // Register before creation. Reverse order deletes accounts before their employees.
+          for (const { kind, name } of records.reverse()) {
+            try {
+              await cleanup(page, kind, name);
+              outcomes.push(`${kind}: ${name}: absent after cleanup`);
+            } catch (error) {
+              const message = `${kind}: ${name}: ${String(error)}`;
+              errors.push(message);
+              outcomes.push(message);
+            }
+          }
+        });
+      } finally {
+        await testInfo.attach('cleanup', { body: outcomes.join('\n'), contentType: 'text/plain' });
+        await page.close();
+      }
+      if (errors.length)
+        throw new Error(
+          `Cleanup failed for ${errors.length} resource(s). See cleanup attachment.\n${errors.join('\n')}`,
+        );
+    },
+    { timeout: 90_000 },
+  ],
+  diagnostics: [
+    async ({ page }, use, testInfo) => {
+      const errors: string[] = [];
+      page.on('response', (r) => {
+        const path = new URL(r.url()).pathname;
+        if (path.includes('/api/') && r.status() >= 400)
+          errors.push(`${r.request().method()} ${path} ${r.status()}`);
+      });
+      await use();
+      if (errors.length)
+        await testInfo.attach('HTTP errors', {
+          body: errors.join('\n'),
+          contentType: 'text/plain',
+        });
+    },
+    { auto: true },
+  ],
 });
 export { expect } from '@playwright/test';

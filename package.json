@@ -5,12 +5,14 @@
   "description": "Portfolio Playwright and TypeScript test suite for OrangeHRM Demo",
   "scripts": {
     "test": "playwright test",
+    "test:demo": "node scripts/run-demo.mjs",
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui",
     "report": "playwright show-report",
     "typecheck": "tsc --noEmit",
-    "allure:report": "allure generate allure-results -o allure-report",
-    "allure:open": "allure open allure-report"
+    "allure:report": "node scripts/allure-report.mjs",
+    "allure:open": "allure open",
+    "format:check": "prettier --check pages fixtures tests utils playwright.config.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

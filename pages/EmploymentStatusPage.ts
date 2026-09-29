@@ -1,41 +1,46 @@
-import { Locator, Page } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { AdminPage } from './AdminPage';
+import { exactRow, field, rowAction, waitForList } from '../utils/ui';
 export class EmploymentStatusPage extends AdminPage {
-  constructor(page: Page) {
-    super(page);
+  async open() {
+    await this.page.goto('/web/index.php/admin/employmentStatus');
+    await waitForList(this.page);
   }
-  async open(): Promise<void> {
-    await this.openConfiguration('Employment Status');
+  getRow(name: string) {
+    return exactRow(this.page, name);
   }
-  async add(name: string): Promise<void> {
+  get nameError() {
+    return field(this.page, 'Name').locator('.oxd-input-field-error-message');
+  }
+  async add(name: string) {
     await this.page.getByRole('button', { name: 'Add' }).click();
+    await field(this.page, 'Name').locator('input').fill(name);
 
-    const form = this.page.locator('form');
-
-    await form.getByRole('textbox').fill(name);
-    await form.getByRole('button', { name: 'Save' }).click();
+    await this.page.getByRole('button', { name: 'Save', exact: true }).click();
+    if (name) {
+      await expect(this.page.getByText('Successfully Saved', { exact: true })).toBeVisible();
+      await waitForList(this.page);
+      await expect(this.getRow(name)).toHaveCount(1);
+    }
   }
-  async edit(existing: string, replacement: string): Promise<void> {
-    await this.page
-      .getByRole('row')
-      .filter({ hasText: existing })
-      .getByRole('button')
-      .nth(1)
-      .click();
-
-    const input = this.page.locator('form').getByRole('textbox');
-
-    await input.click();
+  async edit(existing: string, replacement: string) {
+    await rowAction(this.getRow(existing), 'edit').click();
+    const input = field(this.page, 'Name').locator('input');
+    await expect(input).toHaveValue(existing);
     await input.fill(replacement);
-
-    await this.page.getByRole('button', { name: 'Save' }).click();
+    await this.page.getByRole('button', { name: 'Save', exact: true }).click();
+    await expect(this.page.getByText('Successfully Updated', { exact: true })).toBeVisible();
+    await waitForList(this.page);
   }
-  async delete(name: string): Promise<void> {
-    await this.page.getByRole('row').filter({ hasText: name }).getByRole('button').first().click();
+  async delete(name: string) {
+    await rowAction(this.getRow(name), 'delete').click();
     await this.page.getByRole('button', { name: 'Yes, Delete' }).click();
+    await expect(this.page.getByText('Successfully Deleted', { exact: true })).toBeVisible();
   }
-
-  getRow(name: string): Locator {
-    return this.page.getByRole('row').filter({ hasText: name });
+  async cleanup(name: string) {
+    await this.open();
+    if (await this.getRow(name).count()) await this.delete(name);
+    await this.open();
+    await expect(this.getRow(name)).toHaveCount(0);
   }
 }
