@@ -2,6 +2,8 @@
 
 QA automation project for the **OrangeHRM** web application using **Playwright and TypeScript**.
 
+**[View Test Report](https://igorzig.github.io/OrangeHRM-playwright/)** — sanitized Allure report from the recorded run on 29 September 2026: **22 passed, 1 failed**.
+
 The project combines manual test design with automated UI testing, reusable test architecture, test reporting, and CI/CD execution through **Azure DevOps**.
 
 ## Project Overview
@@ -250,6 +252,8 @@ npx playwright show-report <run-directory>/playwright-report
 ## Allure Reporting
 
 The project uses **Allure** for test reporting in addition to the Playwright HTML report.
+
+**[Open the hosted Allure report](https://igorzig.github.io/OrangeHRM-playwright/)** from any browser; no local installation is needed. This is a dated portfolio snapshot, with private diagnostic details excluded. New test runs do not automatically replace this snapshot.
 
 Replace `<run-directory>` with the path printed by `npm run test:demo`.
 
