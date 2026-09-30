@@ -1,44 +1,92 @@
-# OrangeHRM Playwright QA Portfolio
+# OrangeHRM Playwright Test Automation
 
-UI test automation for the [OrangeHRM public demo](https://opensource-demo.orangehrmlive.com),
-built with **Playwright, TypeScript, Page Object Model and Azure DevOps**.
+QA automation project for the **OrangeHRM** web application using **Playwright and TypeScript**.
 
-The project demonstrates independent test setup, generated test data, cleanup after
-failures, persisted-state assertions and investigation of application defects.
+The project combines manual test design with automated UI testing, reusable test architecture, test reporting, and CI/CD execution through **Azure DevOps**.
 
-## Coverage and results
+## Project Overview
 
-**Recorded local run — 29 September 2026:** 22 passed, 1 failed, 0 skipped.
-All 23 tests ran in headless Chromium with one worker and no retries in approximately
-3 minutes 36 seconds. The failure concerns department editing and is documented in
-the [defect investigation](docs/bug-reports/department-edit-investigation.md).
+* **72 functional test cases** designed for OrangeHRM
+* **23 Playwright tests** currently automated
+* Tests written in **TypeScript**
+* **Page Object Model (POM)** for page interactions
+* Reusable **Playwright fixtures**
+* Dynamic test data generation
+* **GitHub** for source control
+* **Azure DevOps** for CI/CD test execution
+* **Allure** for test reporting
+* **Playwright HTML Report** for local test results
 
-| Area | Tests | Behaviour checked |
-| --- | ---: | --- |
-| Login | 7 | Valid and invalid credentials, required fields, logout and protected-route access |
-| User management | 4 | ESS creation, employee association, search/delete, required fields and duplicate usernames |
-| Departments | 4 | Create, edit persistence, delete and required name; edit fails in the recorded run |
-| Employment status | 4 | Create, edit persistence, delete and required name |
-| Job titles | 4 | Create with description, edit persistence, delete and required title |
-| **Total** | **23** | **Chromium UI tests** |
+## Automated Test Coverage
 
-PIM employee creation supplies test-owned data for user-management scenarios.
-The current automated scope is Login and selected Admin workflows.
+The current automation covers selected OrangeHRM functionality from the manually designed test suite.
 
-## Manual testing
+### Login — 7 tests
 
-The [test-case workbook](docs/test-scenarious/I_Zigelbaum_TestScenarioAndTestCases.xlsx)
-contains 72 cases across PIM, Admin, Login, Leave, Time and Attendance, and Recruitment.
-A separate [scenario workbook](docs/test-scenarious/I_Zigelbaum_TestScenarios.xlsx)
-contains 72 scenarios. Workbook execution statuses are historical manual records,
-separate from the automated results above.
+* Valid login
+* Invalid username
+* Invalid password
+* Empty username
+* Empty password
+* Empty username and password
+* Logout
 
-The [defect reports](docs/bug-reports) include reproduction steps, expected and actual
-results, and supporting observations.
+### Admin — 16 tests
 
-## Architecture
+#### User Management — 4 tests
 
-### How the framework works
+* Add an ESS user
+* Search for and delete an ESS user
+* Validate mandatory fields when adding a user
+* Validate duplicate username handling
+
+#### Departments — 4 tests
+
+* Add a department
+* Edit a department
+* Delete a department
+* Validate department data
+
+#### Employment Status — 4 tests
+
+* Add an employment status
+* Edit an employment status
+* Delete an employment status
+* Validate employment status data
+
+#### Job Titles — 4 tests
+
+* Add a job title
+* Edit a job title
+* Delete a job title
+* Validate job title data
+
+> **Current automation:** 23 tests
+> **Manual test suite:** 72 functional test cases
+>
+> Automated coverage is being expanded progressively from the broader manual test suite.
+>
+> Recorded local run, 29 September 2026: **22 passed, 1 failed**. The [department edit investigation](docs/bug-reports/department-edit-investigation.md) documents the HTTP 422 failure.
+
+## Technology Stack
+
+| Technology             | Purpose                              |
+| ---------------------- | ------------------------------------ |
+| Playwright             | UI test automation                   |
+| TypeScript             | Test development                     |
+| Node.js                | Runtime and package management       |
+| Page Object Model      | Maintainable page interactions       |
+| Playwright Fixtures    | Reusable test setup and dependencies |
+| GitHub                 | Source control and project hosting   |
+| Azure DevOps           | CI/CD test execution                 |
+| Allure                 | Test reporting                       |
+| Playwright HTML Report | Local test reporting                 |
+| Prettier               | Code formatting                      |
+
+## Test Automation Architecture
+
+The project uses the **Page Object Model** to separate test logic from page interactions.
+Typed fixtures provide authentication, page objects, resource cleanup and HTTP diagnostics.
 
 ```mermaid
 flowchart TD
@@ -68,7 +116,9 @@ provide page objects and authenticate Admin tests. Each scenario creates its own
 performs actions through page objects and asserts the result. Teardown removes registered
 records in reverse order and attaches cleanup outcomes, including after assertion failures.
 
-### Project structure
+This structure keeps test cases readable and allows common page interactions and setup to be reused across tests.
+
+## Project Structure
 
 ```text
 OrangeHRM-playwright/
@@ -117,100 +167,169 @@ OrangeHRM-playwright/
 └── README.md
 ```
 
-Generated evidence lives under `artifacts/` and is excluded from Git. The execution
-script records run metadata; Playwright writes reports and failure attachments, and
-the Allure script builds the report from its result files. Azure publishes CI results
-and artifacts after execution.
+## CI/CD
 
-### Design decisions
+The project uses **Azure DevOps** to execute the Playwright test suite.
 
-| Component | Responsibility |
-| --- | --- |
-| Test specs | Describe business scenarios and verify observable outcomes |
-| Fixtures | Supply typed dependencies, authenticate tests, track resources and run teardown |
-| Page objects | Encapsulate page interactions and reusable field/record checks |
-| Test data | Build scenario inputs independently of page interactions |
-| UI helpers | Reuse exact row matching, field scoping and response-aware searches |
-| Configuration | Set the target environment, browser, timeouts and reporters |
-| Scripts and CI | Run the suite reproducibly and collect execution evidence |
+### Pipeline workflow
 
-Create, edit and delete scenarios reopen pages or repeat searches to verify persistence.
-User-management tests create an employee before an ESS account; cleanup deletes the
-account before the employee. Locators prefer roles and exact scoped text, with CSS
-where the application lacks accessible labels. Edit methods wait for the current
-value to load before changing it.
+```text
+GitHub
+   ↓
+Azure DevOps Pipeline
+   ↓
+Install Node.js
+   ↓
+Install dependencies
+   ↓
+Install Playwright browsers
+   ↓
+Run Playwright tests
+   ↓
+Generate test reports
+   ↓
+Publish test artifacts
+```
 
-## Run locally
+The Azure DevOps pipeline is defined in:
+
+```text
+azure-pipelines.yml
+```
+
+This demonstrates integration between source control and automated test execution through CI/CD.
+
+## Running Tests Locally
 
 Use **Node.js 22**, matching the Azure pipeline.
 
+### Install dependencies
+
 ```bash
 npm ci
+```
+
+### Install Playwright browsers
+
+```bash
 npx playwright install chromium
-npm run typecheck
-npm run format:check
+```
+
+### Run the full test suite
+
+```bash
 npm run test:demo
 ```
 
-The public demo is the default target. Copy `.env.example` to an ignored `.env` to
-configure `BASE_URL`, `ADMIN_USERNAME` and `ADMIN_PASSWORD`. The demo fallback is
-limited to the public demo host; other environments require their own credentials.
+The runner prints an `artifacts/baseline-*` directory containing the reports and execution metadata.
 
-Useful commands:
+### Run tests in headed mode
 
 ```bash
-npx playwright test --list
-npm run test:demo -- tests/login/login.spec.ts
-npm run test:headed
-npm run test:ui
+npx playwright test --headed
 ```
 
-The configuration uses a 60-second test timeout, 15-second action timeout and
-10-second assertion timeout. Tests run with one worker and no retries.
+### Run a specific test file
 
-## Reports
+```bash
+npx playwright test tests/admin/departments.spec.ts
+```
 
-`npm run test:demo` prints a new `artifacts/baseline-*` directory. It records the
-source commit, working-tree state, execution settings and results in `execution.json`.
-The directory also contains Playwright HTML, JSON, JUnit and Allure results, with
-screenshots, videos and traces retained for failures.
+### Run tests in debug mode
 
-Replace `<run-directory>` with the path printed by the runner:
+```bash
+npx playwright test --debug
+```
+
+### Open the Playwright HTML report
 
 ```bash
 npx playwright show-report <run-directory>/playwright-report
+```
+
+## Allure Reporting
+
+The project uses **Allure** for test reporting in addition to the Playwright HTML report.
+
+Replace `<run-directory>` with the path printed by `npm run test:demo`.
+
+Generate the Allure report:
+
+```bash
 npm run allure:report -- <run-directory>
+```
+
+Open the report locally:
+
+```bash
 npm run allure:open -- <run-directory>/allure-report
 ```
 
-Generated reports are Git-ignored and must be produced locally or downloaded from
-a CI run. Review reports before sharing: diagnostic attachments can contain account
-and session data.
+## Test Data
 
-## Azure DevOps
+The project uses **dynamic test data** for scenarios where unique values are required.
 
-The [Azure pipeline](azure-pipelines.yml) installs Node 22, locked npm dependencies,
-Chromium and system dependencies, then type-checks and runs the tests. It publishes
-JUnit results and an evidence artifact containing reports and failure diagnostics.
-Reporting steps also run after test failures.
+For example, dynamically generated values can be used when creating departments, employment statuses, job titles, or users. This helps reduce conflicts when tests are executed repeatedly.
 
-Configure `BASE_URL` and `ADMIN_USERNAME` as pipeline variables and `ADMIN_PASSWORD`
-as a secret variable. The documented execution result above is local; an Azure run
-result is not included. Azure DevOps is the current CI configuration; the earlier
-GitHub Actions workflow has been retired.
+Environment-specific configuration is stored using environment variables.
 
-## Scope and next steps
+Example configuration:
 
-The shared demo can reset or be modified by other users. Generated names reduce
-collisions, but runs remain dependent on demo availability. Configuration-list cleanup
-currently checks rendered records and has not been validated with large paginated lists.
+```text
+.env.example
+```
 
-Next priorities are ESS permission checks, disabled-account behaviour and selected
-field boundaries. Standalone PIM, Leave, Time and Recruitment automation remain planned.
+Sensitive local configuration is kept outside source control through `.gitignore`.
+
+## Quality Approach
+
+The project combines manual test design with automated testing.
+
+The manual test suite considers:
+
+* Positive scenarios
+* Negative scenarios
+* Boundary and edge cases
+* Functional validation
+* Role-based behaviour
+
+The automation focuses on selected high-value scenarios and demonstrates how manually designed test cases can be translated into maintainable automated tests.
+
+## Key QA Automation Practices
+
+This project demonstrates practical use of:
+
+* **Playwright**
+* **TypeScript**
+* **Page Object Model**
+* **Reusable fixtures**
+* **Dynamic test data**
+* **Environment variables**
+* **Test reporting**
+* **CI/CD with Azure DevOps**
+* **Source control with GitHub**
+* **Code formatting with Prettier**
+
+## Project Goal
+
+The goal of this project is to demonstrate practical QA automation skills using a realistic web application.
+
+It shows the progression from **manual test design to automated UI testing and CI/CD execution**, using tools and practices commonly used in modern QA engineering.
+
+## Test Execution Demo
+
+The Azure DevOps pipeline is configured to run Playwright tests after changes are pushed to the `main` branch.
+
+The pipeline generates an Allure report and publishes it as a pipeline artifact.
+
+<img width="800" height="420" alt="ScreenRecording2026-09-25215507-ezgif com-video-to-gif-converter" src="https://github.com/user-attachments/assets/99cffc43-703d-408c-ae84-317a98777e5d" />
+<img width="800" height="398" alt="ScreenRecording2026-09-25221332-ezgif com-video-to-gif-converter" src="https://github.com/user-attachments/assets/de2210cd-58f3-4239-95e8-e0add659fb5c" />
 
 ## Author
 
-**Igor Zigelbaum** — QA Engineer | Software Tester | Test Automation
+**Igor Zigelbaum**
 
-- GitHub: [IgorZig](https://github.com/IgorZig)
-- LinkedIn: [Igor Zigelbaum](https://www.linkedin.com/in/igorzigelbaum)
+QA Engineer | Software Tester | Test Automation
+
+* GitHub: [IgorZig](https://github.com/IgorZig)
+* LinkedIn: [Igor Zigelbaum](https://www.linkedin.com/in/igorzigelbaum)
