@@ -1,62 +1,50 @@
-# Department edit: blank optional fields rejected on save
+# Department edit rejects blank optional fields
 
-Investigated 29 September 2026 against the public OrangeHRM demo, Chromium.
-Status: reproduced; application change required.
+**Environment:** OrangeHRM public demo, Chromium
+
+**Observed:** 29 September 2026
+
+**Status:** Reproduced in the recorded test run
 
 ## Reproduction
 
-1. Log in as the demo administrator and open Admin > Organization > Structure.
-2. Enable Edit, add a uniquely named department, and leave Unit Id and Description blank.
-3. Save successfully, then open the new department's own edit action.
-4. Wait until the existing name has loaded, change only its name and save.
+1. Log in as an administrator and open Admin > Organization > Structure.
+2. Enable Edit and add a uniquely named department, leaving Unit Id and Description blank.
+3. Save, then open the new department's edit action.
+4. Change only the department name and save.
 
-Expected: the renamed department is saved and remains renamed after reopening
-the structure. Both optional fields were accepted as blank during creation.
+**Expected:** The new name is saved and remains visible after reopening the structure.
 
-Observed: the save request returns HTTP 422; the edit dialog remains open. The
-automated persistence test fails. The test does not skip, expect failure, increase
-timeouts, or populate unrelated optional fields to conceal this behaviour.
+**Actual:** The update returns HTTP 422, and the edit dialog remains open.
 
-## Evidence and established failure mechanism
-
-The targeted run `artifacts/baseline-2026-09-29T14-05-06-274Z` recorded:
+## Request and response evidence
 
 ```text
 POST /web/index.php/api/v2/admin/subunits -> 200
-request:  unitId="", description="", name=<generated name>, parentId=1
-response: unitId=null, description=null, name=<generated name>
+request:  unitId="", description="", name=<test name>, parentId=1
+response: unitId=null, description=null, name=<test name>
 
-PUT /web/index.php/api/v2/admin/subunits/17 -> 422
-request:  unitId=null, description=null, name=<generated name> Updated
+PUT /web/index.php/api/v2/admin/subunits/<id> -> 422
+request:  unitId=null, description=null, name=<updated test name>
 response: {"error":{"status":"422","message":"Invalid Parameter",
           "data":{"invalidParamKeys":["unitId","description"]}}}
 ```
 
-The trace proves the correct new name reached the API and identifies the two
-rejected parameters. This rules out the name selector and edit-form hydration
-race as the cause of this observed failure. It establishes an inconsistency
-between the values returned after creation and accepted by the update endpoint.
-The precise frontend/backend implementation responsible is not established:
-application source and server logs were not available. No claim is made that all
-department editing is broken or that shared-demo interference is impossible.
+The requested new name reaches the API correctly. Creation returns null values for
+the blank optional fields, while the update rejects those values. Application source
+or server logs are needed to determine which component should normalize them.
 
-The repository fixes separately correct the structure route, scope edit/delete
-actions to the exact department, set the Edit toggle only when necessary, and wait
-for the old name to load. Save now asserts the API response immediately, producing
-the 422 error rather than waiting for the dialog to disappear.
+## Automated regression and cleanup
 
-## Retest and cleanup
+The [department edit test](../../tests/admin/departments.spec.ts) waits for the saved
+name to load, submits the replacement and checks the save response. After a successful
+update, it reopens the structure to verify persistence.
 
-The targeted retest reproduced the 422 after those locator/synchronization fixes.
-Its cleanup attachment verifies that both the original and replacement names are
-absent afterward. The recorded full run completed with 22 passed and 1 failed test;
-the department edit was the sole failure.
+The recorded full run completed with 22 passed and 1 failed test; department editing
+was the sole failure. Cleanup confirmed absence of both the original and replacement
+names. Local reports contain the response assertion, HTTP diagnostics and failure trace.
 
-Failure evidence is in each run's `test-results/admin-departments-Departme-0c0a2-ersist-an-edited-department-chromium/`
-directory: `trace.zip`, `test-failed-1.png`, video and `error-context.md`. The HTML
-report includes the HTTP errors and cleanup attachments. These generated artifacts
-are ignored by Git; preserve the run directory when sharing evidence.
+## Suggested fix and retest
 
-Suggested application follow-up: align optional-field normalization and update
-validation, then rerun the unchanged name-only edit and verify persistence. That
-application-side change has not been made in this test repository.
+Align optional-field normalization with update validation. Retest the name-only edit
+with blank Unit Id and Description, then reopen the structure and verify the saved name.

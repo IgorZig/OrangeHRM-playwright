@@ -1,135 +1,129 @@
-# OrangeHRM Playwright QA portfolio
+# OrangeHRM Playwright QA Portfolio
 
-A focused UI automation project using Playwright, TypeScript, Page Object Model,
-typed fixtures and generated test data against the public OrangeHRM demo.
+UI test automation for the [OrangeHRM public demo](https://opensource-demo.orangehrmlive.com),
+built with **Playwright, TypeScript, Page Object Model and Azure DevOps**.
 
-**Latest local baseline, 29 September 2026: 22 passed, 1 failed, 0 skipped.**
-All 23 tests ran in Chromium with one worker and zero retries in 216.484 seconds.
-The department edit fails with an evidenced HTTP 422 application response. This
-is not a claim of full regression stability.
+The project demonstrates independent test setup, generated test data, cleanup after
+failures, persisted-state assertions and investigation of application defects.
 
-## Automated coverage
+## Coverage and results
+
+**Recorded local run — 29 September 2026:** 22 passed, 1 failed, 0 skipped.
+All 23 tests ran in headless Chromium with one worker and no retries in approximately
+3 minutes 36 seconds. The failure concerns department editing and is documented in
+the [defect investigation](docs/bug-reports/department-edit-investigation.md).
 
 | Area | Tests | Behaviour checked |
 | --- | ---: | --- |
-| Login | 7 | Valid/invalid login, field-specific required errors, logout and protected-route rejection |
-| User management | 4 | ESS creation with username/role/status/employee checks, search/delete, field validation, duplicate username |
-| Departments | 4 | Create, edit persistence, delete after reopening, required name; edit currently fails |
-| Employment status | 4 | Create, edit persistence, delete after reopening, required name |
-| Job titles | 4 | Create with description, edit persistence, delete after reopening, required title |
-| **Total** | **23** | Chromium UI tests |
+| Login | 7 | Valid and invalid credentials, required fields, logout and protected-route access |
+| User management | 4 | ESS creation, employee association, search/delete, required fields and duplicate usernames |
+| Departments | 4 | Create, edit persistence, delete and required name; edit fails in the recorded run |
+| Employment status | 4 | Create, edit persistence, delete and required name |
+| Job titles | 4 | Create with description, edit persistence, delete and required title |
+| **Total** | **23** | **Chromium UI tests** |
 
-PIM employee creation supports User Management test setup; it is not a standalone
-automated PIM suite. Observing HTTP responses for synchronization and diagnostics
-does not constitute an API testing suite.
+PIM employee creation supplies test-owned data for user-management scenarios.
+The current automated scope is Login and selected Admin workflows.
 
-## Manual work and planned coverage
+## Manual testing
 
-The manual test workbooks contain **72 cases and 72 scenarios**, with unique
-IDs and matching module/number keys. They cover PIM, Admin, Login, Leave, Time and
-Attendance, and Recruitment. Historical manual statuses are separate from the
-current automation results. See the [test cases](docs/test-scenarious/I_Zigelbaum_TestScenarioAndTestCases.xlsx)
-and [scenarios](docs/test-scenarious/I_Zigelbaum_TestScenarios.xlsx).
+The [test-case workbook](docs/test-scenarious/I_Zigelbaum_TestScenarioAndTestCases.xlsx)
+contains 72 cases across PIM, Admin, Login, Leave, Time and Attendance, and Recruitment.
+A separate [scenario workbook](docs/test-scenarious/I_Zigelbaum_TestScenarios.xlsx)
+contains 72 scenarios. Workbook execution statuses are historical manual records,
+separate from the automated results above.
 
-Standalone PIM, Leave, Time and Recruitment automation are possible future work;
-they are not implemented here. The repository does not demonstrate automated SQL,
-Jira/Xray integration, AI testing, comprehensive boundary coverage or a browser matrix.
+The [defect reports](docs/bug-reports) include reproduction steps, expected and actual
+results, and supporting observations.
 
 ## Architecture
 
 ```text
-tests/login + tests/admin   Business scenarios and assertions
-          |
-fixtures/test-fixtures.ts   Typed page objects, login, resource cleanup, HTTP diagnostics
-          |
-pages/                     OrangeHRM interactions and field/record checks
-utils/                     Exact/scoped locators, synchronized search, generated data, environment
-scripts/                   Fresh demonstration runs and Allure generation
+tests/       Business scenarios and assertions
+    |
+fixtures/    Typed page objects, authentication, cleanup and HTTP diagnostics
+    |
+pages/       Page interactions and reusable record checks
+    |
+utils/       Scoped locators, search synchronization and data generation
+
+test-data/   Typed test data
+scripts/     Execution and report generation
 ```
 
-Tests register owned records before creation. Fixture teardown attempts cleanup
-in reverse order, deleting users before employees, even after assertion failures.
-Cleanup checks exact records after reopening/searching, attaches its outcomes and
-fails visibly if cleanup fails. It cannot guarantee cleanup after process termination
-or an unavailable application.
-
-Locators use roles, exact values and labelled field containers. CSS remains where
-OrangeHRM lacks associated labels or uses buttons with `role="none"`. Edit tests wait
-for the existing value to load before filling, then reopen to check persistence.
+- Each test creates its own required records and registers them for cleanup.
+- Teardown deletes accounts before their employees and reports cleanup failures.
+- Create, edit and delete checks reopen the page or repeat a search to verify persistence.
+- Locators use roles and exact, scoped text, with CSS for controls lacking accessible labels.
+- Edit actions wait for the existing value to load before changing it.
 
 ## Run locally
 
-Use Node.js 22 or later. The pipeline selects Node 22. Install the locked dependencies:
+Use **Node.js 22**, matching the Azure pipeline.
 
 ```bash
 npm ci
 npx playwright install chromium
 npm run typecheck
 npm run format:check
-npx playwright test --list
 npm run test:demo
 ```
 
-The public demo is the default target. `.env.example` contains only its public demo
-account. Copy it to an ignored `.env` for local configuration. For another target,
-set `BASE_URL`, `ADMIN_USERNAME` and `ADMIN_PASSWORD`; credentials are required and
-are not supplied by the demo fallback. Keep private passwords in secret variables.
+The public demo is the default target. Copy `.env.example` to an ignored `.env` to
+configure `BASE_URL`, `ADMIN_USERNAME` and `ADMIN_PASSWORD`. The demo fallback is
+limited to the public demo host; other environments require their own credentials.
 
-`npm run test:demo` creates a timestamped `artifacts/baseline-*` directory and records
-the Git commit, dirty-worktree flag, execution settings and exact report statistics.
-It uses Chromium, one worker and zero retries. A focused run can pass Playwright filters:
+Useful commands:
 
 ```bash
+npx playwright test --list
 npm run test:demo -- tests/login/login.spec.ts
+npm run test:headed
+npm run test:ui
 ```
 
 The configuration uses a 60-second test timeout, 15-second action timeout and
-10-second assertion timeout. Retries are disabled. The HTML report uses `open: 'never'`.
-No global timeout was increased to mask the department failure.
+10-second assertion timeout. Tests run with one worker and no retries.
 
-## Reports and evidence
+## Reports
 
-Each run contains Playwright HTML, JSON and JUnit reports, raw Allure results, and
-failure traces/screenshots/videos. Business steps and cleanup outcomes appear in
-reports; Allure includes browser, Node, commit and target metadata centrally.
+`npm run test:demo` prints a new `artifacts/baseline-*` directory. It records the
+source commit, working-tree state, execution settings and results in `execution.json`.
+The directory also contains Playwright HTML, JSON, JUnit and Allure results, with
+screenshots, videos and traces retained for failures.
 
-For the recorded baseline:
+Replace `<run-directory>` with the path printed by the runner:
 
 ```bash
-npx playwright show-report artifacts/baseline-2026-09-29T14-09-27-059Z/playwright-report
-npm run allure:report -- artifacts/baseline-2026-09-29T14-09-27-059Z
-npm run allure:open -- artifacts/baseline-2026-09-29T14-09-27-059Z/allure-report
+npx playwright show-report <run-directory>/playwright-report
+npm run allure:report -- <run-directory>
+npm run allure:open -- <run-directory>/allure-report
 ```
 
-For a new run, substitute its printed directory. `npm run allure:report` with no
-argument selects the latest demonstration run. Generated evidence is ignored by
-Git and available locally or as a CI artifact; a fresh clone does not contain it.
+Generated reports are Git-ignored and must be produced locally or downloaded from
+a CI run. Review reports before sharing: diagnostic attachments can contain account
+and session data.
 
 ## Azure DevOps
 
-The [pipeline](azure-pipelines.yml) installs Node 22,
-locked dependencies and Chromium, type-checks, and runs one worker with no retries.
-It maps environment variables, publishes JUnit through `PublishTestResults@2`,
-generates Allure when results exist and publishes the `qa-evidence` directory with
-HTML, raw results and failure evidence, including after test failures.
+The [Azure pipeline](azure-pipelines.yml) installs Node 22, locked npm dependencies,
+Chromium and system dependencies, then type-checks and runs the tests. It publishes
+JUnit results and an evidence artifact containing reports and failure diagnostics.
+Reporting steps also run after test failures.
 
-Configure `BASE_URL` and `ADMIN_USERNAME` in Azure and mark `ADMIN_PASSWORD` as a
-secret variable. These variables are explicitly referenced by the YAML and must be
-configured before running it. No Azure build was launched or verified during this
-local baseline; the YAML is implementation evidence, not proof of a successful CI run.
+Configure `BASE_URL` and `ADMIN_USERNAME` as pipeline variables and `ADMIN_PASSWORD`
+as a secret variable. The documented execution result above is local; an Azure run
+result is not included. Azure DevOps is the current CI configuration; the earlier
+GitHub Actions workflow has been retired.
 
-## Defect investigation and limitations
+## Scope and next steps
 
-[Department edit investigation](docs/bug-reports/department-edit-investigation.md):
-creation accepts empty Unit Id and Description, returns them as null, and the edit
-request sends null values that the API rejects with 422. The new name reaches the
-API correctly. The failing test remains enabled; exact backend implementation
-responsibility is not established without server source/logs.
+The shared demo can reset or be modified by other users. Generated names reduce
+collisions, but runs remain dependent on demo availability. Configuration-list cleanup
+currently checks rendered records and has not been validated with large paginated lists.
 
-The shared demo can reset or be changed by other users. Generated names reduce
-collisions but do not isolate the environment. These results are one dated baseline,
-not a reliability trend. Configuration-list cleanup operates on the rendered list;
-it has not been validated against large, paginated installations.
+Next priorities are ESS permission checks, disabled-account behaviour and selected
+field boundaries. Standalone PIM, Leave, Time and Recruitment automation remain planned.
 
 ## Author
 
