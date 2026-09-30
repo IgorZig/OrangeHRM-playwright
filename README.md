@@ -38,24 +38,107 @@ results, and supporting observations.
 
 ## Architecture
 
-```text
-tests/       Business scenarios and assertions
-    |
-fixtures/    Typed page objects, authentication, cleanup and HTTP diagnostics
-    |
-pages/       Page interactions and reusable record checks
-    |
-utils/       Scoped locators, search synchronization and data generation
+### How the framework works
 
-test-data/   Typed test data
-scripts/     Execution and report generation
+```mermaid
+flowchart TD
+    LOCAL["Local execution<br/>npm run test:demo"] --> RUNNER["Playwright Test runner"]
+    CI["Azure DevOps<br/>azure-pipelines.yml"] --> RUNNER
+    CONFIG["playwright.config.ts<br/>Browser, timeouts and reporters"] --> RUNNER
+    RUNNER --> TESTS["Test specs<br/>Login and Admin scenarios"]
+
+    FIXTURES["Typed fixtures<br/>Page objects, login, cleanup and diagnostics"] -->|provide test dependencies| TESTS
+    ENV["Environment configuration<br/>.env / Azure variables"] --> CONFIG
+    ENV -->|admin credentials| FIXTURES
+    DATA["Test data and generators<br/>User factory and unique identifiers"] --> TESTS
+
+    TESTS -->|actions and assertions| PAGES["Page objects<br/>Login, Dashboard, Admin and PIM"]
+    FIXTURES -->|setup and teardown| PAGES
+    HELPERS["Shared UI helpers<br/>Fields, rows and synchronized search"] --> PAGES
+    PAGES --> BROWSER["Chromium browser context<br/>Isolated for each test"]
+    BROWSER --> APP["OrangeHRM public demo"]
+
+    RUNNER --> REPORTS["Execution evidence<br/>HTML, JSON, JUnit and Allure results"]
+    BROWSER -.->|failure capture| EVIDENCE["Screenshots, video and trace"]
+    EVIDENCE --> REPORTS
 ```
 
-- Each test creates its own required records and registers them for cleanup.
-- Teardown deletes accounts before their employees and reports cleanup failures.
-- Create, edit and delete checks reopen the page or repeat a search to verify persistence.
-- Locators use roles and exact, scoped text, with CSS for controls lacking accessible labels.
-- Edit actions wait for the existing value to load before changing it.
+**Test lifecycle:** Playwright creates an isolated browser context. Requested fixtures
+provide page objects and authenticate Admin tests. Each scenario creates its own data,
+performs actions through page objects and asserts the result. Teardown removes registered
+records in reverse order and attaches cleanup outcomes, including after assertion failures.
+
+### Project structure
+
+```text
+OrangeHRM-playwright/
+├── tests/
+│   ├── login/
+│   │   └── login.spec.ts
+│   └── admin/
+│       ├── users.spec.ts
+│       ├── departments.spec.ts
+│       ├── employment-status.spec.ts
+│       └── job-titles.spec.ts
+├── fixtures/
+│   └── test-fixtures.ts          # Typed fixtures, authentication and resource lifecycle
+├── pages/
+│   ├── LoginPage.ts
+│   ├── DashboardPage.ts
+│   ├── AdminPage.ts              # Shared Admin page base
+│   ├── UserManagementPage.ts
+│   ├── DepartmentsPage.ts
+│   ├── EmploymentStatusPage.ts
+│   ├── JobTitlesPage.ts
+│   └── PimPage.ts                # Employee setup and cleanup for user tests
+├── test-data/
+│   ├── users.ts                 # Typed ESS account factory
+│   ├── employees.ts             # Data definitions for future coverage
+│   ├── leave.ts                 # Data definitions for future coverage
+│   └── recruitment.ts           # Data definitions for future coverage
+├── utils/
+│   ├── ui.ts                    # Scoped field/row locators and search synchronization
+│   ├── environment.ts           # Environment-specific administrator credentials
+│   └── data-generator.ts        # Unique test values and date helper
+├── scripts/
+│   ├── run-demo.mjs             # Timestamped runs and execution metadata
+│   └── allure-report.mjs        # Allure report generation
+├── docs/
+│   ├── bug-reports/             # Defect reports and department-edit investigation
+│   └── test-scenarious/         # Manual test-case and scenario workbooks
+├── playwright.config.ts        # Browser, execution settings and reporters
+├── azure-pipelines.yml         # CI installation, execution and report publication
+├── tsconfig.json               # Strict TypeScript configuration
+├── package.json                # Commands and development dependencies
+├── package-lock.json           # Locked dependency versions
+├── .env.example                # Example environment configuration
+├── .gitignore
+├── .prettierrc
+└── README.md
+```
+
+Generated evidence lives under `artifacts/` and is excluded from Git. The execution
+script records run metadata; Playwright writes reports and failure attachments, and
+the Allure script builds the report from its result files. Azure publishes CI results
+and artifacts after execution.
+
+### Design decisions
+
+| Component | Responsibility |
+| --- | --- |
+| Test specs | Describe business scenarios and verify observable outcomes |
+| Fixtures | Supply typed dependencies, authenticate tests, track resources and run teardown |
+| Page objects | Encapsulate page interactions and reusable field/record checks |
+| Test data | Build scenario inputs independently of page interactions |
+| UI helpers | Reuse exact row matching, field scoping and response-aware searches |
+| Configuration | Set the target environment, browser, timeouts and reporters |
+| Scripts and CI | Run the suite reproducibly and collect execution evidence |
+
+Create, edit and delete scenarios reopen pages or repeat searches to verify persistence.
+User-management tests create an employee before an ESS account; cleanup deletes the
+account before the employee. Locators prefer roles and exact scoped text, with CSS
+where the application lacks accessible labels. Edit methods wait for the current
+value to load before changing it.
 
 ## Run locally
 
