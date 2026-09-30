@@ -6,7 +6,7 @@ typed fixtures and generated test data against the public OrangeHRM demo.
 **Latest local baseline, 29 September 2026: 22 passed, 1 failed, 0 skipped.**
 All 23 tests ran in Chromium with one worker and zero retries in 216.484 seconds.
 The department edit fails with an evidenced HTTP 422 application response. This
-is not a claim of full regression stability. See the [execution record](docs/execution-baseline.md).
+is not a claim of full regression stability.
 
 ## Automated coverage
 
@@ -25,10 +25,11 @@ does not constitute an API testing suite.
 
 ## Manual work and planned coverage
 
-The owner-maintained workbooks contain **72 cases and 72 scenarios**, with unique
+The manual test workbooks contain **72 cases and 72 scenarios**, with unique
 IDs and matching module/number keys. They cover PIM, Admin, Login, Leave, Time and
 Attendance, and Recruitment. Historical manual statuses are separate from the
-current automation results. See the [inventory and outstanding review items](docs/manual-testing.md).
+current automation results. See the [test cases](docs/test-scenarious/I_Zigelbaum_TestScenarioAndTestCases.xlsx)
+and [scenarios](docs/test-scenarious/I_Zigelbaum_TestScenarios.xlsx).
 
 Standalone PIM, Leave, Time and Recruitment automation are possible future work;
 they are not implemented here. The repository does not demonstrate automated SQL,
@@ -103,11 +104,10 @@ npm run allure:open -- artifacts/baseline-2026-09-29T14-09-27-059Z/allure-report
 For a new run, substitute its printed directory. `npm run allure:report` with no
 argument selects the latest demonstration run. Generated evidence is ignored by
 Git and available locally or as a CI artifact; a fresh clone does not contain it.
-The [baseline record](docs/execution-baseline.md) records the actual outcome and provenance.
 
 ## Azure DevOps
 
-The owner-updated [pipeline](azure-pipelines.yml) is preserved. It installs Node 22,
+The [pipeline](azure-pipelines.yml) installs Node 22,
 locked dependencies and Chromium, type-checks, and runs one worker with no retries.
 It maps environment variables, publishes JUnit through `PublishTestResults@2`,
 generates Allure when results exist and publishes the `qa-evidence` directory with
@@ -130,16 +130,6 @@ The shared demo can reset or be changed by other users. Generated names reduce
 collisions but do not isolate the environment. These results are one dated baseline,
 not a reliability trend. Configuration-list cleanup operates on the rendered list;
 it has not been validated against large, paginated installations.
-
-Some manual cases still need requirement clarification or more precise expected
-results. In particular, Manager-role and future-attendance assumptions should not
-be presented as confirmed defects solely from historical workbook statuses.
-
-[Security review](docs/security-review.md): current workbooks have no labelled custom
-credential candidates detected in the bounded scan. Historical Git content still
-contains custom credentials. Revocation/rotation and any coordinated history cleanup
-remain owner actions. Review traces before sharing because they can contain session
-data; `.gitignore` does not erase historical content or protect published artifacts.
 
 ## Author
 

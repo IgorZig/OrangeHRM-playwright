@@ -1,9 +1,7 @@
 # Department edit: blank optional fields rejected on save
 
 Investigated 29 September 2026 against the public OrangeHRM demo, Chromium.
-Status: reproduced; application change required. This was called BUG-001 in the
-earlier repository audit. The owner's current BUG-001 Word document concerns
-profile-photo deletion, so this investigation uses a descriptive identifier.
+Status: reproduced; application change required.
 
 ## Reproduction
 
@@ -51,8 +49,8 @@ the 422 error rather than waiting for the dialog to disappear.
 
 The targeted retest reproduced the 422 after those locator/synchronization fixes.
 Its cleanup attachment verifies that both the original and replacement names are
-absent afterward. The final full-run outcome is recorded in
-[the execution baseline](../execution-baseline.md).
+absent afterward. The recorded full run completed with 22 passed and 1 failed test;
+the department edit was the sole failure.
 
 Failure evidence is in each run's `test-results/admin-departments-Departme-0c0a2-ersist-an-edited-department-chromium/`
 directory: `trace.zip`, `test-failed-1.png`, video and `error-context.md`. The HTML
